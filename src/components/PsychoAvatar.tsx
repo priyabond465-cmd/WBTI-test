@@ -7,6 +7,7 @@ interface PsychoAvatarProps {
   level: ResultData['level'];
   avatarKey: string;
   matchRate?: number;
+  isPoster?: boolean;
 }
 
 const AVATAR_MAP: Record<string, string> = {
@@ -36,12 +37,12 @@ const AVATAR_MAP: Record<string, string> = {
   'SSR_PRINTER': '/24.png',
 };
 
-export default function PsychoAvatar({ level, avatarKey, matchRate = 100 }: PsychoAvatarProps) {
+export default function PsychoAvatar({ level, avatarKey, matchRate = 100, isPoster = false }: PsychoAvatarProps) {
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   
   // Chaos Mutant logic
-  const isChaos = matchRate === 99 && level === 'SSR';
+  const isChaos = matchRate === 99 && level === 'SSR' && !isPoster;
   const imgSrc = AVATAR_MAP[avatarKey];
   const FallbackAvatar = ArchetypeAvatars[avatarKey] || ArchetypeAvatars['DEFAULT'];
 
@@ -61,7 +62,7 @@ export default function PsychoAvatar({ level, avatarKey, matchRate = 100 }: Psyc
   }, [imgSrc]);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl border-2 border-white/10 bg-gray-900/50">
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl border-2 border-[#ffffff1a] bg-[#11182780]">
       <motion.div
         className="w-full h-full relative"
         animate={isChaos ? {
