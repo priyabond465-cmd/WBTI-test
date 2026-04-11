@@ -21,14 +21,18 @@ export default function ResultPage({ result, baseType, totalCrazyScore, radarDat
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isCapturing, setIsCapturing] = useState(true);
+  const [showRareModal, setShowRareModal] = useState(false);
 
   // Automatically generate the shareable image on mount
   useEffect(() => {
-    // Trigger fireworks for rare levels
-    if (result.level === 'SSR' || result.level === 'UR') {
-      const duration = 5 * 1000;
+    // Trigger fireworks for rare levels (R, SR, SSR, UR)
+    const isRare = ['R', 'SR', 'SSR', 'UR'].includes(result.level);
+    
+    if (isRare) {
+      // Enhanced fireworks
+      const duration = 8 * 1000;
       const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      const defaults = { startVelocity: 45, spread: 360, ticks: 120, zIndex: 3000 };
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -39,11 +43,58 @@ export default function ResultPage({ result, baseType, totalCrazyScore, radarDat
           return clearInterval(interval);
         }
 
-        const particleCount = 50 * (timeLeft / duration);
-        // since particles fall down, start a bit higher than random
-        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-      }, 250);
+        const particleCount = 100 * (timeLeft / duration);
+        
+        // Multiple bursts from different positions
+        confetti({ 
+          ...defaults, 
+          particleCount, 
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          colors: ['#ff003c', '#ffd700', '#00ffff', '#a855f7', '#ffffff']
+        });
+        confetti({ 
+          ...defaults, 
+          particleCount, 
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          colors: ['#ff003c', '#ffd700', '#00ffff', '#a855f7', '#ffffff']
+        });
+        confetti({ 
+          ...defaults, 
+          particleCount: particleCount * 1.5, 
+          origin: { x: 0.5, y: 0.6 },
+          colors: ['#ffd700', '#ffffff', '#00ffff']
+        });
+        
+        // Side cannons
+        if (timeLeft % 1000 < 300) {
+          confetti({
+            ...defaults,
+            particleCount: 40,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#ff003c', '#ffd700']
+          });
+          confetti({
+            ...defaults,
+            particleCount: 40,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#00ffff', '#a855f7']
+          });
+        }
+      }, 300);
+
+      // Show the "High Class" modal after a short delay
+      const modalTimer = setTimeout(() => {
+        setShowRareModal(true);
+      }, 1500);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(modalTimer);
+      };
     }
 
     const timer = setTimeout(async () => {
@@ -500,6 +551,58 @@ export default function ResultPage({ result, baseType, totalCrazyScore, radarDat
           </button>
         </div>
       </motion.div>
+
+      {/* Rare Result Modal */}
+      {showRareModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className={`relative w-full max-w-sm p-8 rounded-3xl border-2 ${theme.border} ${theme.cardBg} ${theme.glow} text-center overflow-hidden`}
+          >
+            {/* Decorative Background */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.2),transparent_70%)]"></div>
+            </div>
+
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="mb-6 inline-block"
+            >
+              <Award size={80} className={theme.accent2} />
+            </motion.div>
+
+            <h2 className={`text-3xl font-black mb-4 ${theme.accent2} tracking-tight`}>
+              恭喜你！
+            </h2>
+            
+            <div className="space-y-4 mb-8">
+              <p className="text-xl font-bold text-white">
+                鉴定为：<span className={theme.accent}>稀有搞钱王八</span>
+              </p>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                你的搞钱基因在人群中仅占 <span className={`font-bold ${theme.accent2}`}>{rarityPercent}%</span>。<br/>
+                这种级别的执行力与心机，简直是天生的财富收割机！
+              </p>
+              <div className={`py-2 px-4 rounded-full bg-white/5 border ${theme.border} inline-block text-xs font-bold ${theme.accent}`}>
+                ✨ 尊贵的 {rarityLabel} 玩家 ✨
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowRareModal(false)}
+              className={`w-full py-4 rounded-xl bg-gradient-to-r from-[#ff003c] to-[#a855f7] text-white font-black text-lg shadow-[0_0_20px_rgba(255,0,60,0.5)] hover:scale-105 transition-transform`}
+            >
+              收下赞美
+            </button>
+            
+            <p className="mt-4 text-[10px] text-gray-500 uppercase tracking-[0.2em]">
+              Elite Wealth Gene Detected
+            </p>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
